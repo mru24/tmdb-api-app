@@ -1,4 +1,219 @@
+let app = {
+	async init() {
+		console.log("TMDB APP READY");
+		this.jq = $;
+		this.docElement = this.jq(document.documentElement);
+        this.docElement.attr('data-theme','dark');
+        this.themeSelector = this.jq('ul.theme-selector li');
+        this.themeSelector.on('click',(e)=>{ this.initThemeSelect(e); });
 
+		this.getHeight = this.jq('.get-height');
+		this.jq(window) .on('load resize',()=>{
+			this.getHeight.length > 0?this.initGetHeight(this.getHeight):'';
+		})
+
+		this.dateField = this.jq('#date');
+		this.dateField.length>0?this.getYear(this.dateField):'';
+
+		this.movies = this.jq('#movies');
+
+		this.response = '';
+
+		this.movieData = '';
+		this.discoverURL = 'https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&page=1&sort_by=popularity.desc';
+		this.now_playingURL = 'https://api.themoviedb.org/3/movie/now_playing?language=en-US&page=1';
+		this.popularURL = 'https://api.themoviedb.org/3/movie/popular?language=en-US&page=1';
+		this.top_ratedURL = 'https://api.themoviedb.org/3/movie/top_rated?language=en-US&page=1';
+		this.upcomingURL = 'https://api.themoviedb.org/3/movie/upcoming?language=en-US&page=1';
+
+		this.genreData = '';
+		this.genreURL = 'https://api.themoviedb.org/3/genre/movie/list?language=en';
+
+		this.category = '';
+		this.selector = this.jq('#selector');
+        this.selector.on('change', (e)=>{
+            var opt = e.currentTarget;
+            this.category = this.jq(opt).find('option:selected').val();
+            console.log();(this.category);
+        })  
+
+		await this.startApp();
+
+		this.trigger = this.jq('.trigger');
+		this.trigger.on('click',(e)=>{ this.initTrigger(e); });
+	},
+	async startApp() {
+		await this.readApi(this.genreURL);
+		console.log("RESPONSE GENRES: ",this.response);
+
+		if(this.response.genres.length > 0) {
+			this.genreData = this.response.genres;
+			this.genreFilter(this.genreData);
+			console.log(this.genreData);
+		}	
+
+
+		await this.readApi(this.discoverURL);
+		console.log("RESPONSE MOVIES: ",this.response);
+
+		if(this.response.results.length > 0) {
+			this.movieData = this.response.results;
+			await this.showMovies(this.movieData);
+		}			
+	},
+	async readApi(link) {
+		const options = {
+			method: 'GET',
+			headers: {
+				accept: 'application/json',
+				Authorization: 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI4YzY5NWVjMjdmY2NjYjg3MzU2MDIyMGM1YTJlODg2NSIsInN1YiI6IjVhZTQ4ODM2YzNhMzY4NmY4YjAwYTllNSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.GWPkIsylQphrKP5hLDCMq9gM3KUQQZC0c7LiG3y1NPQ'
+			}
+		};
+		  
+		try {
+			const response = await fetch(link, options);
+			const result = await response.json();
+			this.response = result;
+		} catch (error) {
+			console.error(error);
+		}
+	},
+	async genreFilter(data) {
+		this.jq('#genre-filter').empty()
+		let html = '';
+		html += `<ul>`;
+		data.forEach(element => {
+			html +=	`<li class="trigger genre-filter" data-target="${element.id}">${element.name}</li>`;
+		});
+		html += `</ul>`
+		this.jq('#genre-filter').html(html);
+
+	},
+	async showMovies(data) {
+
+		this.movies.empty();
+		let html = '';
+		data.forEach(movie => {
+			
+			html = `
+			<div class="single trigger modal-trigger" data-id="${movie.id}">
+				<div class="box">
+					<div class="image main-image" style="background-image:url('https://image.tmdb.org/t/p/w500${movie.poster_path}');" data-score="${Math.round(movie.vote_average*10)}"></div>                     
+				</div>    
+				
+				<div class="footer">
+					<p class="title">${movie.title}</p>
+					<p class="release_date">${movie.release_date}</p>
+				</div>
+				<div class="trigger data-cover-trigger"><span class="info-icon">&#9432;</span></div>
+				<div class="data-cover">
+					<div class="content">
+						<small>${movie.overview}</small>
+					</div>
+				</div>
+			</div>
+			
+			<div class="modal d-none ${movie.id}">
+				<div class="content">
+					<div class="trigger close modal-close text-right">&times;</div>
+					<small><span>Movie Id:</span>${movie.id}</small></br>
+					<div class="row">
+						<div class="col">
+							<img src="https://image.tmdb.org/t/p/w500${movie.poster_path}" />
+						</div>
+						<div class="col col-2">
+							<h3>${movie.title}</h3>
+							<p><span>Origina title:</span>${movie.original_title}</p>
+							<p><span>Release date:</span>${movie.release_date}</p>
+							<p><span>Popularity:</span>${movie.popularity} votes</p>
+							<p><span>Avg. vote:</span>${Math.round(movie.vote_average*10)}%</p>`
+			if(movie.adult == true) { 
+			html +=		 	`<p class="danger">Adult Only</p>`;
+			};  
+							
+			html += `
+						</div>
+						<div class="col col-3">
+							<h4 class="">Overview:</h4>
+							<div class="">
+								<p>${movie.overview}</p>
+							</div>
+						
+							<h4 class="">Genres:</h4>
+							<div class="">
+								<ul class="genres">`;				
+							for(let i = 0; i < movie.genre_ids.length; i++) {
+								for (let g = 0; g < this.genreData.length; g++) {
+									if(movie.genre_ids[i] == this.genreData[g].id) {
+										html += `<li class="trigger">${this.genreData[g].name}</li>`;
+									};					
+								}				
+							}
+			html += 	
+								`</ul>
+							</div>						
+						</div>
+					</div>`;
+
+			html += 
+				`</div>
+			</div>`;
+
+			this.movies.append(html);
+		});
+	},
+
+	async initTrigger(e) {
+		let trigger = e.currentTarget;
+		
+		console.log(trigger);
+		
+		if(this.jq(trigger).hasClass('modal-trigger')) {
+			let target = '.'+this.jq(trigger).attr('data-id');
+			this.jq('.modal'+target).fadeIn();
+		}
+		if(this.jq(trigger).hasClass('accordion')) {
+			let target = this.jq(trigger).next('.accordion-content');
+			this.jq(target).slideToggle();
+		}
+		if(this.jq(trigger).hasClass('paginate')) {
+			this.page = this.jq(trigger).attr('data-target');
+			// console.log(this.page);
+		}
+
+		if(this.jq(trigger).hasClass('modal-close')) {
+			this.jq('.modal').fadeOut();
+		}
+	},
+	async initThemeSelect(e) {
+        console.log('theme select');
+        var selector = e.currentTarget;
+        if(this.jq(selector).hasClass('active')) {
+            this.docElement.attr('data-theme','light');
+            this.themeSelector.removeClass('active');
+            this.jq(selector).addClass('active');
+        }
+        if(this.jq(selector).hasClass('dark')) {
+            this.docElement.attr('data-theme','dark');
+            this.themeSelector.removeClass('active');
+            this.jq(selector).addClass('active');                
+        };
+    },
+	async initGetHeight(e) {
+        var height = 0;
+        e.each((i,e)=>{ height += this.jq(e).outerHeight(); });
+        this.jq('main').css('height','calc(100vh - '+height+'px');
+    },
+    async getYear(el) {
+        let date = new Date();
+        let dateYear = date.getFullYear();
+        el.html(dateYear);
+    },
+}
+app.init();
+
+
+/**
 
 let a = {
 	async init() {
@@ -209,4 +424,4 @@ let a = {
 	},
 }
 
-a.init();
+a.init(); */
