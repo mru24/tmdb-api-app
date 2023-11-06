@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>TMDB App</title>
+    <link rel="stylesheet" href="./style.css">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+  </head>
+  <body>
+    <header class="get-height">
+      <div class="container">
+        <div class="row">
+          <div class="col">
+            <p>
+              <select name="selector" id="selector">
+                <option value="">Category:</option>
+                <option value="nowPlaying">Now Playing</option>
+                <option value="topRated">Top Rated</option>
+                <option value="popular">Popular</option>
+                <option value="upcoming">Upcoming</option>
+              </select>
+            </p>                        
+          </div>
+          <div class="col">
+            <h1 class="text-center">Movie Database</h1>
+          </div>
+          <div class="col text-right">
+            <form id="search">
+              <p>
+                <input id="search" type="text" placeholder="Search:">
+                <button class="clear">&times;</button>
+                <input type="submit" value="&#x1F50D;">
+              </p>
+            </form>    
+          </div>                    
+        </div>
+      </div>
+    </header>
+    <main class="">
+      <div class="container">
+        <div id="movies"></div>
+        <div id="pagination"></div>
+      </div>
+    </main>
+    <footer class="get-height">
+      <div class="container">
+        <div class="row">
+          <div class="col">
+            <ul class="theme-selector">
+              <li class="light">&#9788;</li>
+              <li class="dark active">&#9789;</li>
+            </ul>
+          </div>
+          <div class="col text-right">
+            &copy; WWProject <span id="date"></span>
+          </div>
+        </div>
+      </div>
+    </footer>
+	<script src="main.js"></script>
+  </body>
+</html>
