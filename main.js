@@ -1,7 +1,10 @@
+
+
 let app = {
 	async init() {
 		console.log("TMDB APP READY");
 		this.jq = $;
+		this.options = options;
 		this.docElement = this.jq(document.documentElement);
         this.docElement.attr('data-theme','dark');
         this.themeSelector = this.jq('ul.theme-selector li');
@@ -62,13 +65,7 @@ let app = {
 		}			
 	},
 	async readApi(link) {
-		const options = {
-			method: 'GET',
-			headers: {
-				accept: 'application/json',
-				Authorization: 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI4YzY5NWVjMjdmY2NjYjg3MzU2MDIyMGM1YTJlODg2NSIsInN1YiI6IjVhZTQ4ODM2YzNhMzY4NmY4YjAwYTllNSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.GWPkIsylQphrKP5hLDCMq9gM3KUQQZC0c7LiG3y1NPQ'
-			}
-		};
+		const options = this.options;
 		  
 		try {
 			const response = await fetch(link, options);
@@ -179,6 +176,10 @@ let app = {
 		if(this.jq(trigger).hasClass('paginate')) {
 			this.page = this.jq(trigger).attr('data-target');
 			// console.log(this.page);
+		}
+		if(this.jq(trigger).hasClass('genre-filter')) {
+			let target = '.'+this.jq(trigger).attr('data-id');
+			this.jq('.modal'+target).fadeIn();
 		}
 
 		if(this.jq(trigger).hasClass('modal-close')) {
